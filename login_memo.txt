@@ -1,0 +1,92 @@
+<?php -->
+require("./dbconnect.php");
+session_start();
+ 
+  // フォームが送信された場合
+   if (!empty($_JOIN)) {
+    // フォーム入力値を取得
+   $email = $_JOIN['user_email'];
+   $password = $_JOIN['user_password'];
+ 
+    // データベース接続は別ファイルで行っっている前提
+ 
+    // データーベースから入力されたユーザーを検索
+    $sql =
+     "SELECT
+       *
+      FROM
+       users
+      WHERE
+       user_email = :user_email
+      AND
+       user_password = :user_password";
+    $stmt = $dbh->prepare($sql);
+    $stmt->bindValue(':user_email', $user_email);
+    $stmt->bindValue(':user_password', sha1($user_password));
+    $stmt->execute();
+ 
+    $user = $stmt->fetch();
+ 
+    // ユーザーが見つかればログインOK
+    if ($user) {
+      // $_SESSIONにログインしたユーザーIDを保持
+      $_SESSION['user_id'] = $user['user_id'];
+ 
+      // メールアドレスを記憶させる場合
+      if ($_POST['save'] === 'ON') {
+        クッキーにメールアドレスを保持
+        setcookie('user_email', $user_email, time()+60*60*24*14);
+      }
+ 
+      // ログイン後の画面に遷移
+      header('Location: index.php');
+    } else {
+      // ログインNG
+      $error['login'] = "failed";
+    }
+  }
+?>
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0">
+    <title>アカウント作成</title>
+    <link href="https://unpkg.com/sanitize.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="css/login_style.css">
+</head>
+<body>
+    <div class="content">
+        <form action="login.php" method="POST">
+            <h1>ログイン</h1>
+            <p>ログインに必要となる情報を入力してください</p>
+            <br>
+ 
+            <div class="control">
+                <label for="user_name">ユーザー名</label>
+                <input id="user_name" type="text" name="user_name">
+            </div>
+ 
+            <div class="control">
+                <label for="user_email">メールアドレス<span class="required">必須</span></label>
+                <input id="user_email" type="user_email" name="user_email">
+                
+                    <p class="error">＊メールアドレスを入力してください</p>
+                    
+            </div>
+ 
+            <div class="control">
+                <label for="user_password">パスワード<span class="required">必須</span></label>
+                <input id="user_password" type="user_password" name="user_password">
+                    <p class="error">＊パスワードを入力してください</p>
+            </div>
+ 
+            <div class="control">
+                <button type="submit" class="btn">確認する</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<title>ビデオチャット</title>
+  <!-- <link rel="stylesheet" href="sample.css"> -->
+<meta charset='UTF-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Signers</title>
+<link rel='stylesheet' href='css/style.css'>
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src="https://cdn.webrtc.ecl.ntt.com/skyway-4.4.3.js"></script>  
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/lity/1.6.6/lity.css' />  
+<script src='https://cdnjs.cloudflare.com/ajax/libs/lity/1.6.6/lity.js'></script> 
+
+  
+  <div id="headerFloatingMenu">
+  <img  class="back_btn" src="img/return.png"  alt="return"  onclick="history.back()">
+  <nav>
+  <ul id="navi">
+  <li><a href="http://localhost:8888/signers/interpreting_list.php" style="color:white">予約確認</a></li>
+  <li><a href="#" style="color:white">履歴一覧</a></li>
+  <li><a href="contact_index.php"  style="color:white">お問い合わせ</a></li>
+  </ul>
+  </nav>
+  <!-- ボタン部分ここを後で追加するだけ-->
+  <div class="nav_btn" id="nav_btn">
+  <span class="hamburger_line hamburger_line1"></span>
+  <span class="hamburger_line hamburger_line2"></span>
+  <span class="hamburger_line hamburger_line3"></span>
+  </div>
+  <div class="nav_bg" id="nav_bg"></div>
+  <!-- /ボタン部分ここを後で追加するだけ-->
+  </div>
+  
+</head>
+<body>
+  
+  <P><br><br><br></P>  <!--  送信ボタンがトップメニューに隠れるため、行の高さ調整。後で改善する  -->
+
+  
+  <div class="video_display" id="video_display">
+  <!-- <div> -->
+    <video id="their-video" width="100%" autoplay muted playsinline></video>
+        <div class="my_video_display">
+            <video id="my-video" width="80%" autoplay muted playsinline></video>
+        </div>
+      
+  </div>
+  </div>
+
+
+<div>
+  
+  <p id="my-id"></p>
+  <input id="their-id"></input>
+  <button class="Form-Btn" id="make-call">発信</button>
+</div>
+
+
+  </div>
+
+  <footer>
+
+    <div id="footerFloatingMenu">
+        <a  class="a_button" href="main.php"><img src="img/home.png"></a>
+        <a  class="a_button" href="#"><img src="img/movie.png"></a>
+        <a  class="a_button" href="http://localhost:8888/signers/interpreting_menu.html"><img src="img/sign.png"></a>
+        <a  class="a_button" href="#"><img src="img/videochat.png"></a>
+        <a  class="a_button" href="http://localhost:8888/signers/userdata_menu.html"><img src="img/user.png"></a>
+    </div>
+        
+    
+    </footer>
+
+<script>
+  let localStream;
+
+  // カメラ映像取得
+  navigator.mediaDevices.getUserMedia({video: true, audio: true})
+    .then( stream => {
+    // 成功時にvideo要素にカメラ映像をセットし、再生
+    const videoElm = document.getElementById('my-video');
+    videoElm.srcObject = stream;
+    videoElm.play();
+    // 着信時に相手にカメラ映像を返せるように、グローバル変数に保存しておく
+    localStream = stream;
+  }).catch( error => {
+    // 失敗時にはエラーログを出力
+    console.error('mediaDevice.getUserMedia() error:', error);
+    return;
+  });
+
+  //Peer作成
+  const peer = new Peer({
+      key: 'ee14ed19-677f-470c-8e15-a0888a84feff',
+      debug: 3
+  });
+
+  //PeerID取得
+  peer.on('open', () => {
+      document.getElementById('my-id').textContent = peer.id;
+});
+
+  // 発信処理
+  document.getElementById('make-call').onclick = () => {
+  const theirID = document.getElementById('their-id').value;
+  const mediaConnection = peer.call(theirID, localStream);
+  setEventListener(mediaConnection);
+};
+
+// イベントリスナを設置する関数
+  const setEventListener = mediaConnection => {
+  mediaConnection.on('stream', stream => {
+    // video要素にカメラ映像をセットして再生
+    const videoElm = document.getElementById('their-video')
+    videoElm.srcObject = stream;
+    videoElm.play();
+  });
+}
+
+//着信処理
+  peer.on('call', mediaConnection => {
+  mediaConnection.answer(localStream);
+  setEventListener(mediaConnection);
+});
+
+//errorイベント
+peer.on('error', err => {
+    alert(err.message);
+});
+
+//closeイベント
+peer.on('close', () => {
+  alert('通信が切断しました。');
+});
+
+
+
+
+$(function() {
+            /* SP menu */
+            function toggleNav() {
+                var body = document.body;
+                var hamburger = document.getElementById('nav_btn');
+                var blackBg = document.getElementById('nav_bg');
+                hamburger.addEventListener('click', function() {
+                    body.classList.toggle('nav_open'); //メニュークリックでnav-openというクラスがbodyに付与
+                });
+                blackBg.addEventListener('click', function() {
+                    body.classList.remove('nav_open'); //もう一度クリックで解除
+                });
+            }
+            toggleNav();
+        });
+
+
+        $(function () {
+    $.FindContainer = function () {
+        $('.tab-content>div').each(function findcontent() {
+            var newindex = $('.activetab').index();
+            var newheight = $('.activetab').height();
+            $('.tab-content').animate({
+                'height': newheight+20
+            }, 100);
+            var otherindex = $(this).index();
+            var substractindex = otherindex - newindex;
+            var currentwidth = $('.multipletab').width();
+            var newpositions = substractindex * currentwidth;
+            $(this).animate({
+                'left': newpositions
+            });
+        });
+    };
+    $.FindId = function () {
+        $('.tab-content>div').each(function () {
+            if ($(this).attr('id') == $('.active').attr('id')) {
+                $('.tab-content>div').removeClass('activetab');
+                $(this).addClass('activetab');
+            }
+        });
+    };
+    $('.tab-buttons>span').first().addClass('active');
+    $('.tab-content>div').each(function () {
+        var activeid = $('.active').attr('id');
+        if ($(this).attr('id') == activeid) {
+            $(this).addClass('activetab');
+        }
+        var currentheight = $('.activetab').height();
+        var currentwidth = $('.multipletab').width();
+        var currentindex = $(this).index();
+        var currentposition = currentindex * currentwidth;
+        $(this).css({
+            'left': currentposition,
+                'width': currentwidth - 40,
+                'padding': '10px 20px'
+        });
+        $(this).attr('data-position', currentposition);
+        $('.tab-content').css('height', currentheight+20);
+    });
+    $('.tab-buttons>span').click(function () {
+
+        $('.tab-buttons>span').removeClass('active');
+        $(this).addClass('active');
+        var currentid = $('.active').attr('id');
+        $.FindId();
+        $.FindContainer();
+    });
+    $('.next').click(function () {
+        var activetabindex = $('.activetab').index() + 1;
+        var containers = $('.tab-content>div').length;
+        if (containers == activetabindex) {
+            $('.tab-buttons>span').removeClass('active');
+            $('.tab-buttons>span').first().addClass('active');
+            var currentid = $('.active').attr('id');
+            $.FindId();
+            $.FindContainer();
+        } else {
+            var currentopen = $('.active').next();
+            $('.active').removeClass('active');
+            currentopen.addClass('active');
+            $.FindId();
+            $.FindContainer();
+        }
+    });
+  $('.prev').click(function(){
+    var activetabindex = $('.activetab').index();
+        if (activetabindex == 0) {
+            $('.tab-buttons>span').removeClass('active');
+            $('.tab-buttons>span').last().addClass('active');
+            var currentid = $('.active').attr('id');
+            $.FindId();
+            $.FindContainer();
+        } else {
+            var currentopen = $('.active').prev();
+            $('.active').removeClass('active');
+            currentopen.addClass('active');
+            $.FindId();
+            $.FindContainer();
+        }
+  });
+});
+
+
+</script>
+
+
+</body>
+</html>
